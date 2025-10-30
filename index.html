@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Temas Kitty - Cores Pastéis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-6 md:p-8">
+    <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-2xl p-6 sm:p-8 md:p-10">
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-center text-gray-800 mb-6 sm:mb-8">
+            🎨 Gerador de Temas Kitty Terminal
+        </h1>
+        
+        <div class="flex flex-col sm:flex-row gap-4 mb-8 items-center justify-center">
+            <select id="colorScheme" class="w-full sm:w-auto px-6 py-3 text-base border-2 border-indigo-500 rounded-lg bg-white text-gray-800 cursor-pointer transition-all hover:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="complementary">Complementar</option>
+                <option value="analogous">Análogo</option>
+                <option value="triadic">Triádico</option>
+                <option value="tetradic">Tetrádico</option>
+                <option value="monochromatic">Monocromático</option>
+                <option value="split-complementary">Complementar Dividido</option>
+            </select>
+            <button onclick="generateColors()" class="w-full sm:w-auto px-6 py-3 text-base bg-indigo-500 text-white font-bold rounded-lg border-2 border-indigo-500 cursor-pointer transition-all hover:bg-indigo-600 hover:-translate-y-0.5 hover:shadow-lg">
+                🎲 Gerar Cores
+            </button>
+            <button onclick="saveConfig()" class="w-full sm:w-auto px-6 py-3 text-base bg-indigo-500 text-white font-bold rounded-lg border-2 border-indigo-500 cursor-pointer transition-all hover:bg-indigo-600 hover:-translate-y-0.5 hover:shadow-lg">
+                💾 Salvar .conf
+            </button>
+        </div>
+
+        <div class="bg-gray-900 rounded-xl p-4 sm:p-6 mb-8 shadow-lg">
+            <div class="rounded-lg overflow-hidden shadow-md">
+                <div class="bg-gray-800 px-4 py-3 flex gap-2 items-center">
+                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                </div>
+                <div id="terminalPreview" class="p-4 sm:p-6 font-mono text-xs sm:text-sm leading-relaxed min-h-[200px] sm:min-h-[250px] md:min-h-[300px]">
+                    <div class="mb-2">
+                        <span>user@kitty</span>:<span>~</span>$ ls -la
+                    </div>
+                    <div class="mb-2">
+                        <span id="prev-color0">drwxr-xr-x</span> 
+                        <span id="prev-color4">5</span> 
+                        <span id="prev-color2">user</span> 
+                        <span id="prev-color6">group</span> 
+                        <span id="prev-color3">4096</span> 
+                        <span id="prev-color5">Oct 28</span> 
+                        <span id="prev-color1">Documents/</span>
+                    </div>
+                    <div class="mb-2">
+                        <span id="prev-color8">-rw-r--r--</span> 
+                        <span id="prev-color12">1</span> 
+                        <span id="prev-color10">user</span> 
+                        <span id="prev-color14">group</span> 
+                        <span id="prev-color11">2048</span> 
+                        <span id="prev-color13">Oct 28</span> 
+                        <span id="prev-color9">config.conf</span>
+                    </div>
+                    <div class="mb-2">
+                        <span>user@kitty</span>:<span>~</span>$ echo <span id="prev-foreground">"Beautiful Pastel Theme!"</span>
+                    </div>
+                    <div class="mb-2" id="prev-foreground-text">Beautiful Pastel Theme!</div>
+                    <div>
+                        <span>user@kitty</span>:<span>~</span>$ <span id="prev-cursor">_</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="colorGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5"></div>
+    </div>
+
+    <script>
+        const colorConfig = {
+            foreground: { label: 'Texto Principal', value: '#d4c5f9' },
+            background: { label: 'Fundo', value: '#1a1625' },
+            cursor: { label: 'Cursor', value: '#f4a7b9' },
+            selection_foreground: { label: 'Seleção - Texto', value: '#1a1625' },
+            selection_background: { label: 'Seleção - Fundo', value: '#b4a7d6' },
+            color0: { label: 'Preto', value: '#4a4458' },
+            color1: { label: 'Vermelho', value: '#f4a7b9' },
+            color2: { label: 'Verde', value: '#b8e0a8' },
+            color3: { label: 'Amarelo', value: '#f9e4a0' },
+            color4: { label: 'Azul', value: '#a7c7e7' },
+            color5: { label: 'Magenta', value: '#d4a7e0' },
+            color6: { label: 'Ciano', value: '#a7e0d4' },
+            color7: { label: 'Branco', value: '#e8d9f5' },
+            color8: { label: 'Preto Brilhante', value: '#6b6376' },
+            color9: { label: 'Vermelho Brilhante', value: '#ffc5d3' },
+            color10: { label: 'Verde Brilhante', value: '#d0f0c0' },
+            color11: { label: 'Amarelo Brilhante', value: '#fff4c8' },
+            color12: { label: 'Azul Brilhante', value: '#c5dff8' },
+            color13: { label: 'Magenta Brilhante', value: '#e8c5f0' },
+            color14: { label: 'Ciano Brilhante', value: '#c5f0e8' },
+            color15: { label: 'Branco Brilhante', value: '#f5f0fa' }
+        };
+
+        function hslToHex(h, s, l) {
+            l /= 100;
+            const a = s * Math.min(l, 1 - l) / 100;
+            const f = n => {
+                const k = (n + h / 30) % 12;
+                const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+                return Math.round(255 * color).toString(16).padStart(2, '0');
+            };
+            return `#${f(0)}${f(8)}${f(4)}`;
+        }
+
+        function generatePastelColor(hue) {
+            const saturation = 40 + Math.random() * 30;
+            const lightness = 70 + Math.random() * 15;
+            return hslToHex(hue, saturation, lightness);
+        }
+
+        function generateDarkPastel() {
+            const hue = Math.random() * 360;
+            const saturation = 15 + Math.random() * 25;
+            const lightness = 8 + Math.random() * 10;
+            return hslToHex(hue, saturation, lightness);
+        }
+
+        function generateColors() {
+            const scheme = document.getElementById('colorScheme').value;
+            const baseHue = Math.random() * 360;
+            let hues = [];
+
+            switch(scheme) {
+                case 'complementary':
+                    hues = [baseHue, (baseHue + 180) % 360];
+                    break;
+                case 'analogous':
+                    hues = [baseHue, (baseHue + 30) % 360, (baseHue - 30 + 360) % 360];
+                    break;
+                case 'triadic':
+                    hues = [baseHue, (baseHue + 120) % 360, (baseHue + 240) % 360];
+                    break;
+                case 'tetradic':
+                    hues = [baseHue, (baseHue + 90) % 360, (baseHue + 180) % 360, (baseHue + 270) % 360];
+                    break;
+                case 'monochromatic':
+                    hues = [baseHue, baseHue, baseHue, baseHue];
+                    break;
+                case 'split-complementary':
+                    hues = [baseHue, (baseHue + 150) % 360, (baseHue + 210) % 360];
+                    break;
+            }
+
+            colorConfig.background.value = generateDarkPastel();
+            colorConfig.foreground.value = generatePastelColor(hues[0]);
+            colorConfig.cursor.value = generatePastelColor(hues[1 % hues.length]);
+            colorConfig.selection_foreground.value = generateDarkPastel();
+            colorConfig.selection_background.value = generatePastelColor(hues[0]);
+
+            const colorHues = [...hues];
+            while(colorHues.length < 8) {
+                colorHues.push(...hues);
+            }
+
+            for(let i = 0; i < 8; i++) {
+                colorConfig[`color${i}`].value = generatePastelColor(colorHues[i % colorHues.length]);
+            }
+
+            for(let i = 8; i < 16; i++) {
+                const baseColor = colorConfig[`color${i-8}`].value;
+                const rgb = parseInt(baseColor.slice(1), 16);
+                const r = Math.min(255, ((rgb >> 16) & 255) + 30);
+                const g = Math.min(255, ((rgb >> 8) & 255) + 30);
+                const b = Math.min(255, (rgb & 255) + 30);
+                colorConfig[`color${i}`].value = `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+            }
+
+            renderColorInputs();
+            updatePreview();
+        }
+
+        function renderColorInputs() {
+            const grid = document.getElementById('colorGrid');
+            grid.innerHTML = '';
+
+            for(const [key, data] of Object.entries(colorConfig)) {
+                const div = document.createElement('div');
+                div.className = 'bg-gray-50 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow';
+                div.innerHTML = `
+                    <label class="block font-bold mb-2 text-gray-700 text-sm">${data.label}</label>
+                    <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center">
+                        <input type="color" value="${data.value}" onchange="updateColor('${key}', this.value)" class="w-full sm:w-16 h-12 sm:h-10 border-0 rounded-md cursor-pointer">
+                        <input type="text" value="${data.value}" onchange="updateColor('${key}', this.value)" pattern="#[0-9A-Fa-f]{6}" class="flex-1 px-3 py-2 border-2 border-gray-300 rounded-md font-mono text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                    </div>
+                `;
+                grid.appendChild(div);
+            }
+        }
+
+        function updateColor(key, value) {
+            if(/^#[0-9A-Fa-f]{6}$/.test(value)) {
+                colorConfig[key].value = value;
+                renderColorInputs();
+                updatePreview();
+            }
+        }
+
+        function updatePreview() {
+            const preview = document.getElementById('terminalPreview');
+            preview.style.background = colorConfig.background.value;
+            preview.style.color = colorConfig.foreground.value;
+
+            for(let i = 0; i < 16; i++) {
+                const el = document.getElementById(`prev-color${i}`);
+                if(el) el.style.color = colorConfig[`color${i}`].value;
+            }
+
+            const fg = document.getElementById('prev-foreground');
+            if(fg) fg.style.color = colorConfig.foreground.value;
+
+            const fgText = document.getElementById('prev-foreground-text');
+            if(fgText) fgText.style.color = colorConfig.foreground.value;
+
+            const cursor = document.getElementById('prev-cursor');
+            if(cursor) {
+                cursor.style.color = colorConfig.cursor.value;
+                cursor.style.background = colorConfig.cursor.value;
+            }
+        }
+
+        function saveConfig() {
+            const scheme = document.getElementById('colorScheme').value;
+            const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+            const filename = `${scheme}-${random}.conf`;
+
+            let content = '# Kitty Theme - Pastel Colors\n';
+            content += `# Scheme: ${scheme}\n\n`;
+
+            for(const [key, data] of Object.entries(colorConfig)) {
+                content += `${key} ${data.value}\n`;
+            }
+
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        renderColorInputs();
+        updatePreview();
+    </script>
+</body>
+</html>
